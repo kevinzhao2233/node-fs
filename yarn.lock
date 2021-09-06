@@ -132,6 +132,11 @@
   dependencies:
     "@types/node" "*"
 
+"@types/cors@^2.8.12":
+  version "2.8.12"
+  resolved "https://r.cnpmjs.org/@types/cors/download/@types/cors-2.8.12.tgz#6b2c510a7ad7039e98e7b8d3d6598f4359e5c080"
+  integrity sha1-ayxRCnrXA56Y57jT1lmPQ1nlwIA=
+
 "@types/express-serve-static-core@^4.17.18":
   version "4.17.24"
   resolved "https://r.cnpmjs.org/@types/express-serve-static-core/download/@types/express-serve-static-core-4.17.24.tgz"
@@ -141,7 +146,7 @@
     "@types/qs" "*"
     "@types/range-parser" "*"
 
-"@types/express@^4.17.13":
+"@types/express@*", "@types/express@^4.17.13":
   version "4.17.13"
   resolved "https://r.cnpmjs.org/@types/express/download/@types/express-4.17.13.tgz"
   integrity sha1-p24plXKJmbq1GjP6vOHXBaNwkDQ=
@@ -160,6 +165,13 @@
   version "1.3.2"
   resolved "https://r.cnpmjs.org/@types/mime/download/@types/mime-1.3.2.tgz"
   integrity sha1-k+Jb+e51/g/YC1lLxP6w6GIRG1o=
+
+"@types/multer@^1.4.7":
+  version "1.4.7"
+  resolved "https://r.cnpmjs.org/@types/multer/download/@types/multer-1.4.7.tgz#89cf03547c28c7bbcc726f029e2a76a7232cc79e"
+  integrity sha1-ic8DVHwox7vMcm8Cnip2pyMsx54=
+  dependencies:
+    "@types/express" "*"
 
 "@types/node@*", "@types/node@^16.7.6":
   version "16.7.6"
@@ -612,6 +624,14 @@ core-util-is@~1.0.0:
   version "1.0.2"
   resolved "https://r.cnpmjs.org/core-util-is/download/core-util-is-1.0.2.tgz"
   integrity sha1-tf1UIgqivFq1eqtxQMlAdUUDwac=
+
+cors@^2.8.5:
+  version "2.8.5"
+  resolved "https://r.cnpmjs.org/cors/download/cors-2.8.5.tgz#eac11da51592dd86b9f06f6e7ac293b3df875d29"
+  integrity sha1-6sEdpRWS3Ya58G9uesKTs9+HXSk=
+  dependencies:
+    object-assign "^4"
+    vary "^1"
 
 create-require@^1.1.0:
   version "1.1.1"
@@ -1573,7 +1593,7 @@ normalize-url@^4.1.0:
   resolved "https://r.cnpmjs.org/normalize-url/download/normalize-url-4.5.1.tgz#0dd90cf1288ee1d1313b87081c9a5932ee48518a"
   integrity sha1-DdkM8SiO4dExO4cIHJpZMu5IUYo=
 
-object-assign@^4.1.1:
+object-assign@^4, object-assign@^4.1.1:
   version "4.1.1"
   resolved "https://r.cnpmjs.org/object-assign/download/object-assign-4.1.1.tgz"
   integrity sha1-IQmtx5ZYh8/AXLvUQsrIv7s2CGM=
@@ -2196,7 +2216,7 @@ v8-compile-cache@^2.0.3:
   resolved "https://r.cnpmjs.org/v8-compile-cache/download/v8-compile-cache-2.3.0.tgz"
   integrity sha1-LeGWGMZtwkfc+2+ZM4A12CRaLO4=
 
-vary@~1.1.2:
+vary@^1, vary@~1.1.2:
   version "1.1.2"
   resolved "https://r.cnpmjs.org/vary/download/vary-1.1.2.tgz"
   integrity sha1-IpnwLG3tMNSllhsLn3RSShj2NPw=

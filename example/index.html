@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh_CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>node-fs 简易上传页面</title>
+  </head>
+  <body>
+    <form id="upload" name="upload" method="POST" enctype="multipart/form-data">
+      <input type="file" name="file" id="file" />
+      <input type="submit" />
+    </form>
+    <button id="download">下载测试文件</button>
+    <script>
+      var form = document.querySelector('#upload');
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var formData = new FormData(form);
+        console.log({ formData });
+        var entriesData = formData.entries();
+        console.log({ entriesData });
+        for (var item of entriesData) {
+          console.log({ item });
+        }
+        var xhr = new XMLHttpRequest();
+        xhr.open('post', 'http://localhost:10001/upload', true);
+        xhr.send(formData);
+      });
+
+      var downloadBtn = document.querySelector('#download');
+      downloadBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        var url = 'http://localhost:10001/download/test.jpg';
+        console.log({ url });
+        var xhr = new XMLHttpRequest();
+        xhr.open('get', url, true);
+        xhr.send();
+      });
+    </script>
+  </body>
+</html>
