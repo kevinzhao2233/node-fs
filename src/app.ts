@@ -8,20 +8,38 @@ import { NextFunction, Request, Response } from 'express';
 import { systemConfig } from './config';
 import path from 'path';
 
+const uploadPath = path.join(__dirname, '../upload');
+const uploadTempPath = path.join(uploadPath, 'temp');
+
 // 用于记录启动时间的日志
 const startTime = Date.now();
 
 const storage = multer.diskStorage({
-  destination: function(req, file, cb) {
-    cb(null, path.resolve(__dirname, '../upload'));
+  destination(req, file, cb) {
+    cb(null, uploadPath);
   },
-  filename: function(req, file, cb) {
+  filename(req, file, cb) {
     cb(null, Date.now() + '-' + file.originalname);
   },
 });
 
 const uploader = multer({
   storage: storage,
+});
+
+const chunkStorage = multer.diskStorage({
+  destination(req, file, callback) {
+    callback(null, uploadTempPath)
+  },
+  filename(req, file, callback) {
+    setImmediate(() => {
+      callback(null, `${req.body.fileMd5}-${req.body.chunkIndex}`)
+    });
+  }
+});
+
+const chunkUploader = multer({
+  storage: chunkStorage,
 });
 
 const app = express();
@@ -44,9 +62,11 @@ app.get('/', function(req, res) {
 });
 
 app.post('/upload', uploader.any(), function(req, res) {
-  console.log('\n\n\n------ req -------->>\n', req);
-  console.log('\n\n\n------ req.files -------->>\n', req.files);
   console.log('\n\n\n------ req.body -------->>\n', req.body);
+  res.sendStatus(200);
+});
+
+app.post('/upload-chunk', chunkUploader.single('file'), function(req, res) {
   res.sendStatus(200);
 });
 
