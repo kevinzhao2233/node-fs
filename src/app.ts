@@ -1,13 +1,21 @@
 // 第三方模块
 import express, { NextFunction, Request, Response } from 'express';
+import path from 'path';
+import fse from 'fs-extra';
 import chalk from 'chalk';
 import multer from 'multer';
 import cors from 'cors';
-import { urlencoded, json } from 'body-parser';
-import { systemConfig } from './config';
-import path from 'path';
-import fse from 'fs-extra';
+import mysql from 'mysql2';
+import { nanoid } from 'nanoid';
+// 使用 import 导入会报错 getExtension undefined
+const mime = require('mime');
+
+import { devServerPort } from './config/appConfig';
+import { mysqlConfig } from './config/dbConfig';
 import { mkdirsSync } from './utils/dir';
+
+const connection = mysql.createConnection(mysqlConfig);
+
 // 用于记录启动时间的日志
 const startTime = Date.now();
 
@@ -20,8 +28,7 @@ const app = express();
 app.use(cors());
 
 // 处理 post 请求
-app.use(urlencoded({ extended: true }));
-app.use(json());
+app.use(express.json());
 
 // 创建上传用的文件夹
 app.use(function(req, res, next) {
@@ -40,7 +47,12 @@ const storage = multer.diskStorage({
     cb(null, uploadPath);
   },
   filename(req, file, cb) {
-    cb(null, Date.now() + '-' + file.originalname);
+    const fileId = nanoid(16);
+    const fileName = `${file.originalname}-${fileId}`;
+    req.body.postFileName = fileName;
+    req.body.fileId = fileId;
+    req.body.mimeType = file.mimetype;
+    cb(null, fileName);
   },
 });
 
@@ -82,7 +94,7 @@ const mergeChunks = (req: Request, res: Response) => {
       return;
     }
     if (chunks.length !== chunkTotal || chunks.length === 0) {
-      res.sendStatus(200);
+      res.sendStatus(400);
       res.end('切片文件数量不符合');
       return;
     }
@@ -117,7 +129,27 @@ app.get('/', function(req, res) {
 });
 
 app.post('/upload', uploader.any(), function(req, res) {
-  res.sendStatus(200);
+  const insertSql = 'INSERT INTO files SET ?';
+  const values = {
+    id: req.body.fileId,
+    name: req.body.fileName,
+    ext: mime.getExtension(req.body.mimeType),
+    state: 'normal',
+    mime: req.body.mimeType,
+    md5: req.body.fileMd5,
+    path: path.join(uploadPath, req.body.postFileName),
+    size: req.body.fileSize,
+    upload_time: new Date(),
+  };
+
+  connection.query(insertSql,
+      values,
+      (err, results, fields) => {
+        if (err) {
+          res.status(500).send('保存到数据库时出错了');
+        }
+        res.status(200).send('文件已上传完毕');
+      });
 });
 
 app.post('/upload-chunk', chunkUploader.any(), function(req, res) {
@@ -129,10 +161,10 @@ app.post('/merge-chunks', mergeChunks);
 app.get('/download/:filename', downloadFile);
 
 // 监听服务
-app.listen(systemConfig.port, function() {
+app.listen(devServerPort, function() {
   console.log(
       chalk.cyan('\n  the server is start at:\n'),
-      '\n  > Local', chalk.green(`http://localhost:${systemConfig.port}\n`),
+      '\n  > Local', chalk.green(`http://localhost:${devServerPort}\n`),
       chalk.cyan(`\n  ready in ${Date.now() - startTime}ms\n`),
   );
 });
