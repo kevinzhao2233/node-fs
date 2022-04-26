@@ -135,7 +135,6 @@ const mergeChunks = (req: Request, res: Response) => {
 };
 
 const downloadFile = (req: Request, res: Response) => {
-// const path = __dirname + '../download/' + req.params.filename;
   const filepath = path.resolve(__dirname, '../download/', req.params.filename);
   console.log({ path, dirname: __dirname, filename: req.params.filename });
   res.sendFile(filepath, (err) => {
@@ -149,7 +148,7 @@ const downloadFile = (req: Request, res: Response) => {
 
 // 接口
 app.get('/', function(req, res) {
-  res.send('欢迎使用 node-fs');
+  res.redirect('http://localhost:10002/');
 });
 
 app.post('/upload', uploader.any(), function(req, res) {
