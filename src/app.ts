@@ -1,6 +1,7 @@
 // 第三方模块
 import express, { NextFunction, Request, Response } from 'express';
 import path from 'path';
+import fs from 'fs';
 import fse from 'fs-extra';
 import chalk from 'chalk';
 import multer from 'multer';
@@ -48,7 +49,7 @@ const storage = multer.diskStorage({
   },
   filename(req, file, cb) {
     const fileId = nanoid(16);
-    const fileName = `${file.originalname}-${fileId}`;
+    const fileName = `${fileId}-${file.originalname}`;
     req.body.postFileName = fileName;
     req.body.fileId = fileId;
     req.body.mimeType = file.mimetype;
@@ -80,13 +81,15 @@ const chunkUploader = multer({
 });
 
 const mergeChunks = (req: Request, res: Response) => {
+  const fileId = nanoid(16);
   const fileName: string = req.body.fileName;
+  const postFileName = `${fileId}-${fileName}`;
   const md5: string = req.body.md5;
   const chunkTotal: number = req.body.chunkTotal;
 
   const fileChunksPath = path.join(uploadTempPath, `${req.body.fileName}-${req.body.md5}`);
   const chunks = fse.readdirSync(fileChunksPath);
-  const fileTargetPath = path.join(uploadPath, fileName);
+  const fileTargetPath = path.join(uploadPath, postFileName);
 
   fse.writeFile(fileTargetPath, '', (err) => {
     if (err) {
@@ -102,11 +105,32 @@ const mergeChunks = (req: Request, res: Response) => {
       // 追加写入到文件中
       const data = fse.readFileSync(path.join(fileChunksPath, `${fileName}-${md5}-${i}`));
       fse.appendFileSync(fileTargetPath, data);
-      // // 删除本次使用的chunk
+      // 删除本次使用的chunk
       fse.unlink(path.join(fileChunksPath, `${fileName}-${md5}-${i}`));
     }
     fse.rmdir(fileChunksPath);
-    res.sendStatus(200);
+
+    const fileMimeType = mime.getType(fileName);
+    const values = {
+      id: fileId,
+      name: fileName,
+      ext: mime.getExtension(fileMimeType),
+      state: 'normal',
+      mime: fileMimeType,
+      md5,
+      path: fileTargetPath,
+      size: fs.statSync(fileTargetPath).size,
+      upload_time: new Date(),
+    };
+    connection.query(
+        'INSERT INTO files SET ?',
+        values,
+        (err, results, fields) => {
+          if (err) {
+            res.status(500).send('保存到数据库时出错了');
+          }
+          res.status(200).send('文件已上传完毕');
+        });
   });
 };
 
@@ -129,7 +153,6 @@ app.get('/', function(req, res) {
 });
 
 app.post('/upload', uploader.any(), function(req, res) {
-  const insertSql = 'INSERT INTO files SET ?';
   const values = {
     id: req.body.fileId,
     name: req.body.fileName,
@@ -142,7 +165,8 @@ app.post('/upload', uploader.any(), function(req, res) {
     upload_time: new Date(),
   };
 
-  connection.query(insertSql,
+  connection.query(
+      'INSERT INTO files SET ?',
       values,
       (err, results, fields) => {
         if (err) {
