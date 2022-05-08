@@ -6,7 +6,7 @@ import fse from 'fs-extra';
 import chalk from 'chalk';
 import multer from 'multer';
 import cors from 'cors';
-import mysql from 'mysql2';
+import mysql, { RowDataPacket } from 'mysql2';
 import { nanoid } from 'nanoid';
 // 使用 import 导入会报错 getExtension undefined
 const mime = require('mime');
@@ -27,6 +27,9 @@ const app = express();
 
 // 允许跨域
 app.use(cors());
+
+// 处理 get 请求参数
+app.use(express.urlencoded());
 
 // 处理 post 请求
 app.use(express.json());
@@ -79,6 +82,53 @@ const chunkStorage = multer.diskStorage({
 const chunkUploader = multer({
   storage: chunkStorage,
 });
+
+const isFileExist = (req: Request, res: Response) => {
+  const { id, md5 } = req.query;
+  connection.query(
+      'SELECT * FROM files WHERE id = ? OR md5 = ?',
+      [id, md5],
+      (err, results: RowDataPacket[], fields) => {
+        if (err) {
+          res.status(500).send('查询数据库时出错了');
+          return;
+        }
+        if (results.length) {
+          res.send({
+            isExist: true,
+            file: results[0],
+          });
+        } else {
+          res.send({
+            isExist: false,
+          });
+        }
+      });
+};
+
+const upload = (req: Request, res: Response) => {
+  const values = {
+    id: req.body.fileId,
+    name: req.body.fileName,
+    ext: mime.getExtension(req.body.mimeType),
+    state: 'normal',
+    mime: req.body.mimeType,
+    md5: req.body.fileMd5,
+    path: path.join(uploadPath, req.body.postFileName),
+    size: req.body.fileSize,
+    upload_time: new Date(),
+  };
+
+  connection.query(
+      'INSERT INTO files SET ?',
+      values,
+      (err, results, fields) => {
+        if (err) {
+          res.status(500).send('保存到数据库时出错了');
+        }
+        res.status(200).send('文件已上传完毕');
+      });
+};
 
 const mergeChunks = (req: Request, res: Response) => {
   const fileId = nanoid(16);
@@ -151,29 +201,9 @@ app.get('/', function(req, res) {
   res.redirect('http://localhost:10002/');
 });
 
-app.post('/upload', uploader.any(), function(req, res) {
-  const values = {
-    id: req.body.fileId,
-    name: req.body.fileName,
-    ext: mime.getExtension(req.body.mimeType),
-    state: 'normal',
-    mime: req.body.mimeType,
-    md5: req.body.fileMd5,
-    path: path.join(uploadPath, req.body.postFileName),
-    size: req.body.fileSize,
-    upload_time: new Date(),
-  };
+app.get('/is-file-exist', isFileExist);
 
-  connection.query(
-      'INSERT INTO files SET ?',
-      values,
-      (err, results, fields) => {
-        if (err) {
-          res.status(500).send('保存到数据库时出错了');
-        }
-        res.status(200).send('文件已上传完毕');
-      });
-});
+app.post('/upload', uploader.any(), upload);
 
 app.post('/upload-chunk', chunkUploader.any(), function(req, res) {
   res.sendStatus(200);
@@ -186,7 +216,7 @@ app.get('/download/:filename', downloadFile);
 // 监听服务
 app.listen(devServerPort, function() {
   console.log(
-      chalk.cyan('\n  the server is start at:\n'),
+      chalk.cyan('\n  the api server is start at:\n'),
       '\n  > Local', chalk.green(`http://localhost:${devServerPort}\n`),
       chalk.cyan(`\n  ready in ${Date.now() - startTime}ms\n`),
   );
