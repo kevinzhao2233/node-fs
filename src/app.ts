@@ -6,7 +6,7 @@ import fse from 'fs-extra';
 import chalk from 'chalk';
 import multer from 'multer';
 import cors from 'cors';
-import mysql, { RowDataPacket } from 'mysql2';
+import mysql, { ResultSetHeader, RowDataPacket } from 'mysql2';
 import { nanoid } from 'nanoid';
 // 使用 import 导入会报错 getExtension undefined
 const mime = require('mime');
@@ -184,6 +184,29 @@ const mergeChunks = (req: Request, res: Response) => {
   });
 };
 
+const removeFile = (req: Request, res: Response) => {
+  const { id, md5 } = req.query;
+  connection.query(
+      'UPDATE files SET state = "removed" WHERE id = ? OR md5 = ?',
+      [id, md5],
+      (err, result: ResultSetHeader, fields) => {
+        if (err) {
+          res.status(500).send('更新数据库时出错了');
+          return;
+        }
+        if (result && result.changedRows && result.changedRows >= 1) {
+          res.send({
+            isRemoved: true,
+          });
+        } else {
+          res.send({
+            isRemoved: false,
+            msg: '该文件不存在或已被删除',
+          });
+        }
+      });
+};
+
 const downloadFile = (req: Request, res: Response) => {
   const filepath = path.resolve(__dirname, '../download/', req.params.filename);
   console.log({ path, dirname: __dirname, filename: req.params.filename });
@@ -210,6 +233,8 @@ app.post('/upload-chunk', chunkUploader.any(), function(req, res) {
 });
 
 app.post('/merge-chunks', mergeChunks);
+
+app.get('/remove', removeFile);
 
 app.get('/download/:filename', downloadFile);
 
