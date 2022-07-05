@@ -1,13 +1,12 @@
-// 第三方模块
+import chalk from 'chalk';
+import cors from 'cors';
 import express, { NextFunction, Request, Response } from 'express';
-import path from 'path';
 import fs from 'fs';
 import fse from 'fs-extra';
-import chalk from 'chalk';
 import multer from 'multer';
-import cors from 'cors';
 import mysql, { ResultSetHeader, RowDataPacket } from 'mysql2';
 import { nanoid } from 'nanoid';
+import path from 'path';
 // 使用 import 导入会报错 getExtension undefined
 const mime = require('mime');
 

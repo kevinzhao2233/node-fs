@@ -1,5 +1,5 @@
-const path = require('path');
-const fse = require('fs-extra');
+import fse from 'fs-extra';
+import path from 'node:path';
 
 export const mkdirsSync = (dirname: string) => {
   if (fse.existsSync(dirname)) {

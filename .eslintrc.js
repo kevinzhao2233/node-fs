@@ -5,6 +5,14 @@ module.exports = {
     'es2021': true,
     'node': true,
   },
+  'settings': {
+    'import/resolver': {
+      node: {
+        paths: ['src'],
+        extensions: ['.js', '.ts'],
+      },
+    },
+  },
   'extends': [
     'google',
   ],
@@ -14,9 +22,19 @@ module.exports = {
   },
   'plugins': [
     '@typescript-eslint',
+    'import',
+    'simple-import-sort',
   ],
   'rules': {
     'max-len': ['error', 140],
     'object-curly-spacing': ['error', 'always', { 'arraysInObjects': false, 'objectsInObjects': false }],
+
+    'import/extensions': [1, 'never'],
+    'import/no-unresolved': 'off',
+    'import/no-extraneous-dependencies': 'off',
+    'import/prefer-default-export': 'off',
+
+    'simple-import-sort/imports': 'error',
+    'simple-import-sort/exports': 'error',
   },
 };
