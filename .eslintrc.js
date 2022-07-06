@@ -2,7 +2,7 @@ module.exports = {
   'env': {
     'browser': true,
     'commonjs': true,
-    'es2021': true,
+    'es2022': true,
     'node': true,
   },
   'settings': {
@@ -18,7 +18,7 @@ module.exports = {
   ],
   'parser': '@typescript-eslint/parser',
   'parserOptions': {
-    'ecmaVersion': 12,
+    'ecmaVersion': 14,
   },
   'plugins': [
     '@typescript-eslint',
@@ -28,6 +28,7 @@ module.exports = {
   'rules': {
     'max-len': ['error', 140],
     'object-curly-spacing': ['error', 'always', { 'arraysInObjects': false, 'objectsInObjects': false }],
+    'new-cap': 'off',
 
     'import/extensions': [1, 'never'],
     'import/no-unresolved': 'off',

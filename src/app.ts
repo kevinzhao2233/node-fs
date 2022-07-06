@@ -12,6 +12,7 @@ const mime = require('mime');
 
 import { devServerPort } from './config/appConfig';
 import { mysqlConfig } from './config/dbConfig';
+import transmission from './routes/transmission';
 import { mkdirsSync } from './utils/dir';
 
 const connection = mysql.createConnection(mysqlConfig);
@@ -217,6 +218,8 @@ const downloadFile = (req: Request, res: Response) => {
     console.dir(err);
   });
 };
+
+app.use(transmission.path, transmission.router);
 
 // 接口
 app.get('/', function(req, res) {
