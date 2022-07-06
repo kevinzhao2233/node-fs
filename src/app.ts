@@ -42,7 +42,7 @@ app.use(function(req, res, next) {
 });
 
 // 错误处理
-app.use(function(err: Error, req: Request, res: Response, next: NextFunction) {
+app.use(function(err: Error, req: Request, res: Response) {
   return res.sendStatus(500);
 });
 
@@ -86,24 +86,24 @@ const chunkUploader = multer({
 const isFileExist = (req: Request, res: Response) => {
   const { id, md5 } = req.query;
   connection.query(
-      'SELECT * FROM files WHERE id = ? OR md5 = ?',
-      [id, md5],
-      (err, results: RowDataPacket[], fields) => {
-        if (err) {
-          res.status(500).send('查询数据库时出错了');
-          return;
-        }
-        if (results.length) {
-          res.send({
-            isExist: true,
-            file: results[0],
-          });
-        } else {
-          res.send({
-            isExist: false,
-          });
-        }
-      });
+    'SELECT * FROM files WHERE id = ? OR md5 = ?',
+    [id, md5],
+    (err, results: RowDataPacket[], fields) => {
+      if (err) {
+        res.status(500).send('查询数据库时出错了');
+        return;
+      }
+      if (results.length) {
+        res.send({
+          isExist: true,
+          file: results[0],
+        });
+      } else {
+        res.send({
+          isExist: false,
+        });
+      }
+    });
 };
 
 const upload = (req: Request, res: Response) => {
@@ -120,14 +120,14 @@ const upload = (req: Request, res: Response) => {
   };
 
   connection.query(
-      'INSERT INTO files SET ?',
-      values,
-      (err, results, fields) => {
-        if (err) {
-          res.status(500).send('保存到数据库时出错了');
-        }
-        res.status(200).send('文件已上传完毕');
-      });
+    'INSERT INTO files SET ?',
+    values,
+    (err, results, fields) => {
+      if (err) {
+        res.status(500).send('保存到数据库时出错了');
+      }
+      res.status(200).send('文件已上传完毕');
+    });
 };
 
 const mergeChunks = (req: Request, res: Response) => {
@@ -173,38 +173,38 @@ const mergeChunks = (req: Request, res: Response) => {
       upload_time: new Date(),
     };
     connection.query(
-        'INSERT INTO files SET ?',
-        values,
-        (err, results, fields) => {
-          if (err) {
-            res.status(500).send('保存到数据库时出错了');
-          }
-          res.status(200).send('文件已上传完毕');
-        });
+      'INSERT INTO files SET ?',
+      values,
+      (err, results, fields) => {
+        if (err) {
+          res.status(500).send('保存到数据库时出错了');
+        }
+        res.status(200).send('文件已上传完毕');
+      });
   });
 };
 
 const removeFile = (req: Request, res: Response) => {
   const { id, md5 } = req.query;
   connection.query(
-      'UPDATE files SET state = "removed" WHERE id = ? OR md5 = ?',
-      [id, md5],
-      (err, result: ResultSetHeader, fields) => {
-        if (err) {
-          res.status(500).send('更新数据库时出错了');
-          return;
-        }
-        if (result && result.changedRows && result.changedRows >= 1) {
-          res.send({
-            isRemoved: true,
-          });
-        } else {
-          res.send({
-            isRemoved: false,
-            msg: '该文件不存在或已被删除',
-          });
-        }
-      });
+    'UPDATE files SET state = "removed" WHERE id = ? OR md5 = ?',
+    [id, md5],
+    (err, result: ResultSetHeader, fields) => {
+      if (err) {
+        res.status(500).send('更新数据库时出错了');
+        return;
+      }
+      if (result && result.changedRows && result.changedRows >= 1) {
+        res.send({
+          isRemoved: true,
+        });
+      } else {
+        res.send({
+          isRemoved: false,
+          msg: '该文件不存在或已被删除',
+        });
+      }
+    });
 };
 
 const downloadFile = (req: Request, res: Response) => {
@@ -243,9 +243,9 @@ app.get('/download/:filename', downloadFile);
 // 监听服务
 app.listen(devServerPort, function() {
   console.log(
-      chalk.cyan('\n  the api server is start at:\n'),
-      '\n  > Local', chalk.green(`http://localhost:${devServerPort}\n`),
-      chalk.cyan(`\n  ready in ${Date.now() - startTime}ms\n`),
+    chalk.cyan('\n  the api server is start at:\n'),
+    '\n  > Local', chalk.green(`http://localhost:${devServerPort}\n`),
+    chalk.cyan(`\n  ready in ${Date.now() - startTime}ms\n`),
   );
 });
 
