@@ -17,7 +17,7 @@ import { mkdirsSync } from './utils/dir';
 
 const connection = mysql.createConnection(mysqlConfig);
 
-// 用于记录启动时间的日志
+// 用于记录启动时间
 const startTime = Date.now();
 
 const uploadPath = path.join(__dirname, '../upload');
@@ -39,11 +39,6 @@ app.use(function(req, res, next) {
   mkdirsSync(uploadPath);
   mkdirsSync(uploadTempPath);
   next();
-});
-
-// 错误处理
-app.use(function(err: Error, req: Request, res: Response) {
-  return res.sendStatus(500);
 });
 
 const storage = multer.diskStorage({
@@ -239,6 +234,11 @@ app.post('/merge-chunks', mergeChunks);
 app.get('/remove', removeFile);
 
 app.get('/download/:filename', downloadFile);
+
+// 错误处理
+app.use(function(err: Error, req: Request, res: Response, next: NextFunction) {
+  res.status(500).send('Something broke!');
+});
 
 // 监听服务
 app.listen(devServerPort, function() {
