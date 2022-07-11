@@ -1,12 +1,23 @@
 import express from 'express';
 
-import { isFileExist } from '../controller/transmission';
+import { chunkUploader, isFileExist, mergeChunks, removeFile, upload, uploader } from '../controller/transmission';
 
-const transmissionRouter = express.Router();
+const router = express.Router();
 
-transmissionRouter.get('/is-file-exist', isFileExist);
+
+router.get('/is-file-exist', isFileExist);
+
+router.post('/upload', uploader.any(), upload);
+
+router.post('/upload-chunk', chunkUploader.any(), function(req, res) {
+  res.sendStatus(200);
+});
+
+router.post('/merge-chunks', mergeChunks);
+
+router.get('/remove', removeFile);
 
 export default {
-  router: transmissionRouter,
+  router,
   path: '/api/transmission',
 };
