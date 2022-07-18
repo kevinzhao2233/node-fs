@@ -12,7 +12,7 @@ const mime = require('mime');
 
 import { devServerPort } from './config/appConfig';
 import { mysqlConfig } from './config/dbConfig';
-import transmission from './routes/transmission';
+import transmission from './routes';
 import { mkdirsSync } from './utils/dir';
 
 const connection = mysql.createConnection(mysqlConfig);

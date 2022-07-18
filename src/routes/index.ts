@@ -1,6 +1,7 @@
 import express from 'express';
 
-import { chunkUploader, isFileExist, mergeChunks, removeFile, upload, uploader } from '../controller/transmission';
+import { chunkUploader, createTransmission,
+  findTransmissionDetail, isFileExist, mergeChunks, removeFile, upload, uploader } from '../controller/transmission';
 
 const router = express.Router();
 
@@ -17,7 +18,11 @@ router.post('/merge-chunks', mergeChunks);
 
 router.get('/remove', removeFile);
 
+router.post('/transmission', createTransmission);
+
+router.get('/transmission/:id', findTransmissionDetail);
+
 export default {
   router,
-  path: '/api/transmission',
+  path: '/api',
 };

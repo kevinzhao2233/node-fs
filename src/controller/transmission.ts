@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import { Request, Response } from 'express';
 import fse from 'fs-extra';
 import multer from 'multer';
@@ -5,8 +6,8 @@ import { nanoid } from 'nanoid';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { conn } from '../models/db';
-import { create, findByMD5, removeById } from '../models/file';
+import { createFile, findFileByMD5, removeFileById } from '../models/file';
+import { createTrans, findTransById } from '../models/transmission';
 import { mkdirsSync } from '../utils/dir';
 
 const mime = require('mime');
@@ -58,7 +59,7 @@ export const isFileExist = async (req: Request, res: Response) => {
     res.status(400).send({ msg: '需要文件 md5 值作为请求参数' });
   }
   try {
-    const { file } = await findByMD5(md5 as string);
+    const { file } = await findFileByMD5(md5 as string);
     res.send({
       isExist: !!file,
       file,
@@ -82,7 +83,7 @@ export const upload = async (req: Request, res: Response) => {
   };
 
   try {
-    await create(values);
+    await createFile(values);
     res.status(200).send('文件已上传完毕');
   } catch (error) {
     res.status(500).send({ msg: 'upload 文件信息保存到数据库时出错' });
@@ -133,7 +134,7 @@ export const mergeChunks = (req: Request, res: Response) => {
     };
 
     try {
-      await create(values);
+      await createFile(values);
       res.status(200).send('文件已上传完毕');
     } catch (error) {
       res.status(500).send({ msg: 'upload 文件信息保存到数据库时出错' });
@@ -144,7 +145,7 @@ export const mergeChunks = (req: Request, res: Response) => {
 export const removeFile = async (req: Request, res: Response) => {
   const { id } = req.query;
   try {
-    const { isRemoved } = await removeById(id as string);
+    const { isRemoved } = await removeFileById(id as string);
     res.status(200).send({
       isRemoved,
       msg: isRemoved ? '文件删除成功' : '该文件不存在或已被删除',
@@ -152,4 +153,35 @@ export const removeFile = async (req: Request, res: Response) => {
   } catch (error) {
     res.status(500).send({ msg: 'removeFile 文件信息删除失败' });
   }
+};
+
+export const createTransmission = async (req: Request, res: Response) => {
+  const { uid, description, expiration, needPassword } = req.body;
+  const id = nanoid(32);
+  const values = {
+    id,
+    uid,
+    description,
+    expiration: dayjs(expiration).format('YYYY-MM-DD HH:DD:MM'),
+    need_password: needPassword,
+    password: needPassword ? Math.random().toString().substring(2, 8): null,
+    share_link: `http://localhost:10001/receive/${id}`,
+  };
+  try {
+    const { success } = await createTrans(values);
+    if (!success) {
+      res.status(500).send({ msg: 'createTrans 创建传输失败' });
+      return;
+    }
+    const { transmission } = await findTransById(id);
+    res.status(200).send(transmission);
+  } catch (error) {
+    res.status(500).send({ msg: 'createTrans 创建传输失败' });
+  }
+};
+
+export const findTransmissionDetail = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { transmission } = await findTransById(id);
+  res.status(200).send(transmission);
 };

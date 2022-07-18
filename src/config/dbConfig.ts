@@ -4,4 +4,5 @@ export const mysqlConfig = {
   password: '2233',
   database: 'file-server',
   port: 3306,
+  dateStrings: true,
 };
