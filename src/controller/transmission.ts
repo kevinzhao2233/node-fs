@@ -8,6 +8,7 @@ import path from 'node:path';
 
 import { createFile, findFileByMD5, removeFileById } from '../models/file';
 import { createTrans, findTransById } from '../models/transmission';
+import { createTransmissionFile } from '../models/transmissionFile';
 import { mkdirsSync } from '../utils/dir';
 
 const mime = require('mime');
@@ -52,7 +53,6 @@ export const chunkUploader = multer({
   storage: chunkStorage,
 });
 
-
 export const isFileExist = async (req: Request, res: Response) => {
   const { md5 } = req.query;
   if (!md5) {
@@ -66,6 +66,19 @@ export const isFileExist = async (req: Request, res: Response) => {
     });
   } catch (error) {
     res.status(500).send({ msg: 'isFileExist 获取数据错误' });
+  }
+};
+
+export const quickUpload = async (req: Request, res: Response) => {
+  const values = {
+    t_id: req.body.transmissionId,
+    f_id: req.body.fileId,
+  };
+  try {
+    await createTransmissionFile(values);
+    res.status(200).send({ isUpload: true });
+  } catch (error) {
+    res.status(500).send({ msg: 'quickUpload 文件信息保存到数据库时出错' });
   }
 };
 
@@ -111,7 +124,7 @@ export const mergeChunks = (req: Request, res: Response) => {
       res.end('切片文件数量不符合');
       return;
     }
-    for (let i = 0; i < chunkTotal; i+=1) {
+    for (let i = 0; i < chunkTotal; i += 1) {
       // 追加写入到文件中
       const data = fse.readFileSync(path.join(fileChunksPath, `${fileName}-${md5}-${i}`));
       fse.appendFileSync(fileTargetPath, data);
@@ -164,7 +177,7 @@ export const createTransmission = async (req: Request, res: Response) => {
     description,
     expiration: dayjs(expiration).format('YYYY-MM-DD HH:DD:MM'),
     need_password: needPassword,
-    password: needPassword ? Math.random().toString().substring(2, 8): null,
+    password: needPassword ? Math.random().toString().substring(2, 8) : null,
     share_link: `http://localhost:10001/receive/${id}`,
   };
   try {
